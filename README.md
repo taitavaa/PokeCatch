@@ -1,3 +1,5 @@
 #/src contains all major files and stuff.
 
-<span style="font-size:1.5em;">PokeCatch</span>
+Send me a dm for bot token and mongodb access
+
+<span style="font-size:10em;">PokeCatch</span>

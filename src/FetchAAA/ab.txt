@@ -1,0 +1,21 @@
+// pokemon-dex-fetcher.js
+
+const fetchPokemonDexEntries = async () => {
+    try {
+      let url = 'https://pokeapi.co/api/v2/pokemon/';
+      while (url) {
+        const response = await fetch(url);
+        const pokemonList = await response.json();
+        for (const pokemon of pokemonList.results) {
+          const pokemonName = pokemon.name;
+          const pokemonData = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`).then((response) => response.json());
+          console.log(`Species data for ${pokemonName}: ${JSON.stringify(pokemonData.species)}`);
+        }
+        url = pokemonList.next;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  fetchPokemonDexEntries();     

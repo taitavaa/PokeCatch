@@ -1,0 +1,53 @@
+const axios = require('axios');
+const cheerio = require('cheerio');
+
+const url = 'https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_National_Pok%C3%A9dex_number';
+
+axios.get(url)
+  .then(response => {
+    console.log('Received response from Bulbapedia');
+    const $ = cheerio.load(response.data);
+    const pokemonList = [];
+
+    // Find the table with the Pokémon list
+    const table = $('table.wikitable.sortable');
+
+    // Loop through each row in the table
+    table.find('tr').each((index, row) => {
+      // Skip the header row
+      if (index === 0) return;
+
+      // Extract the Pokémon data from the row
+      const pokemonData = {
+        nationalDexNumber: $(row).find('td:nth-child(1)').text().trim(),
+        name: $(row).find('td:nth-child(2)').text().trim(),
+      };
+
+      // Add the Pokémon data to the list
+      pokemonList.push(pokemonData);
+    });
+
+    console.log(`Found ${pokemonList.length} Pokémon`);
+
+    // Loop through each Pokémon and extract the Scarlet Dex entry
+    pokemonList.forEach(pokemon => {
+      const pokemonUrl = `https://bulbapedia.bulbagarden.net/wiki/${pokemon.name}_(Pok%C3%A9mon)`;
+      axios.get(pokemonUrl)
+        .then(response => {
+          console.log(`Received response from ${pokemonUrl}`);
+          const $ = cheerio.load(response.data);
+
+          // Find the Scarlet Dex entry
+          const scarletDexEntry = $('span:contains("Scarlet Dex entry")').next().text().trim();
+
+          // Log the Scarlet Dex entry
+          console.log(`${pokemon.name}: ${scarletDexEntry}`);
+        })
+        .catch(error => {
+          console.error(`Error fetching ${pokemonUrl}: ${error}`);
+        });
+    });
+  })
+  .catch(error => {
+    console.error(`Error fetching Bulbapedia: ${error}`);
+  });

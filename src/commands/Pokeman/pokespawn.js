@@ -11,8 +11,9 @@ const rarityWeights = {
   "Legendary": 0.0015,
   "Mythical": 0.00025,
   "Shiny": 0.0001220703125,
-  "What The Fuck": 0, 
+  "What The Fuck": 0, // What the Fuck is, like a Rarity for some unknown reason
 };
+
 
 function getRandomWeightedPokemon(pokemonData, rarityWeights) {
   const totalWeight = Object.values(rarityWeights).reduce((sum, weight) => sum + weight, 0);
@@ -61,35 +62,31 @@ module.exports = {
           text: `Pokeballs: ${pokeballs}\nGreatBalls: ${greatballs}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
         })
       
-      switch (randomPokemon.rarity) {
-        case "Common":
-          embed.setColor("#33B3FF"); // Blue
-          break;
-        case "Uncommon":
-          embed.setColor("#6CF15A"); // Green
-          break;
-        case "Rare":
-          embed.setColor("#FF9F33"); // Orange
-          break;
-        case "Very Rare":
-          embed.setColor("#C80EE0"); // Purple
-          break;
-        case "Legendary":
-          embed.setColor("#F6DFF9"); // Legendary : Clash Royale
-          break;
-        case "Mythical":
-          embed.setColor("#948B5C"); // Champion : Clash Royale
-          break;
-        case "Shiny":
-          embed.setColor("#BAFEFF"); // Gold
-          break;
-        case "What The Fuck":
-          embed.setColor("#e3256b"); // Razzmatazz
-          break;
-        default:
-          embed.setColor("#FFFFFF"); // White (default if rarity is unknown)
-          break;
-      }
+        // I made the color of the embed a function, so you can call it wherever you want instead of copypasting the same logic everywhere.
+        function getRarityColor(rarity) {
+          switch (rarity) {
+            case "Common":
+              return "#33B3FF"; // Blue
+            case "Uncommon":
+              return "#6CF15A"; // Green
+            case "Rare":
+              return "#FF9F33"; // Orange
+            case "Very Rare":
+              return "#C80EE0"; // Purple
+            case "Legendary":
+              return "#F6DFF9"; // Legendary : Clash Royale
+            case "Mythical":
+              return "#948B5C"; // Champion : Clash Royale
+            case "Shiny":
+              return "#BAFEFF"; // Gold
+            case "What The Fuck":
+              return "#e3256b"; // Razzmatazz
+            default:
+              return "#FFFFFF"; // White (default if rarity is unknown)
+          }
+        }
+
+        embed.setColor(getRarityColor(randomPokemon.rarity));
 
       const pokeballButton = new ButtonBuilder()
         .setLabel("Pokeball")
@@ -180,9 +177,163 @@ module.exports = {
 
           catchSuccess = randoms < catchChance;
 
-          const chanceMessage = `catch chance ${catchChance} roll ${randoms} and success ${catchSuccess}`
+          if (catchSuccess) {
+
+            const user = await User.findOne({ userId: interaction.user.id });
+            const existingPokemonIndex = user.caughtPokemon.findIndex(
+              (pokemon) => pokemon.name === randomPokemon.name
+            );
+            if (existingPokemonIndex !== -1) {
+
+              // Pokemon already exists, increase quantity
+              user.caughtPokemon[existingPokemonIndex].quantity++; 
+            } else {
+
+              // Add new Pokemon with quantity 1
+              user.caughtPokemon.push({
+                name: randomPokemon.name,
+                rarity: randomPokemon.rarity,
+                image: randomPokemon.image,
+                dexnum: randomPokemon.dexnum,
+                quantity: 1 
+              });
+            }
+
+            // Save the updated array instead of overwriting it entirely
+            await user.save();
+
+            const newembed = new EmbedBuilder()
+              .setTitle(`✅ | ${user.userName} Caught ${randomPokemon.name} with a Pokéball`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${greatballs}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+            })
+
+            newembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [newembed]});
+
+            } else {
+
+            const failembed = new EmbedBuilder()
+              .setTitle(`❌ | The ${randomPokemon.name} broke free!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${greatballs}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+            })
+
+            failembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [failembed]});
+            
+           
+            } 
+
+            collector.stop();
 
 
+        } else if (interaction.customId === 'greatball-button') {
+          let catchChance = 0.60;
+
+          user.greatball -= 1;
+
+          await user.save()
+
+          if (chosenRarity === 'Common') {
+            catchChance += 0.2; 
+          } else if (chosenRarity === 'Uncommon') {
+            catchChance += 0.1;
+          } else if (chosenRarity === 'Very Rare') {
+            catchChance -= 0.2;
+          } else if (chosenRarity === 'Legendary') {
+            catchChance -= 0.2;
+          } else if (chosenRarity === 'Mythical') {
+            catchChance -= 0.3;
+          } else if (chosenRarity === 'Shiny') {
+            catchChance -= 0.25;
+          } 
+
+          const randoms = Math.floor(Math.random() * 101);
+
+          catchSuccess = randoms < catchChance;
+          
+          if (catchSuccess) {
+
+            const user = await User.findOne({ userId: interaction.user.id });
+            const existingPokemonIndex = user.caughtPokemon.findIndex(
+              (pokemon) => pokemon.name === randomPokemon.name
+            );
+            if (existingPokemonIndex !== -1) {
+
+              // Pokemon already exists, increase quantity
+              user.caughtPokemon[existingPokemonIndex].quantity++; 
+            } else {
+
+              // Add new Pokemon with quantity 1
+              user.caughtPokemon.push({
+                name: randomPokemon.name,
+                rarity: randomPokemon.rarity,
+                image: randomPokemon.image,
+                dexnum: randomPokemon.dexnum,
+                quantity: 1 
+              });
+            }
+
+            // Save the updated array instead of overwriting it entirely
+            await user.save();
+
+
+            const newembed = new EmbedBuilder()
+              .setTitle(`✅ | ${user.userName} Caught ${randomPokemon.name} with a Greatball!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${user.greatball}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+            })
+
+            newembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [newembed]});
+            } else {
+
+            const failembed = new EmbedBuilder()
+              .setTitle(`❌ | The ${randomPokemon.name} broke free!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${user.greatball}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+            })
+
+            failembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [failembed]});
+              outcome = "escaped";
+            }
+
+            collector.stop();
+
+        } else if (interaction.customId === 'ultraball-button') {
+          let catchChance = 0.70;
+
+          user.ultraball -= 1;
+
+          await user.save()
+
+          if (chosenRarity === 'Common') {
+            catchChance += 0.2; 
+          } else if (chosenRarity === 'Uncommon') {
+            catchChance += 0.1;
+          } else if (chosenRarity === 'Very Rare') {
+            catchChance -= 0.2;
+          } else if (chosenRarity === 'Legendary') {
+            catchChance -= 0.2;
+          } else if (chosenRarity === 'Mythical') {
+            catchChance -= 0.3;
+          } else if (chosenRarity === 'Shiny') {
+            catchChance -= 0.25;
+          } 
+
+          const randoms = Math.floor(Math.random() * 101);
+
+          catchSuccess = randoms < catchChance;
 
           if (catchSuccess) {
 
@@ -211,145 +362,32 @@ module.exports = {
 
 
             const newembed = new EmbedBuilder()
-              .setTitle(`A wild ${randomPokemon.rarity} ${randomPokemon.name} appeared!`)
+              .setTitle(`✅ | ${user.userName} Caught ${randomPokemon.name} with a Ultraball!`)
               .setImage(randomPokemon.image)
               .setFooter({
-                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n\nPokeballs: ${pokeballs}\nGreatBalls: ${greatballs}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${pokeballs}\nGreatBalls: ${greatballs}\nUltraBalls: ${user.ultraball}\nMasterBalls: ${masterballs}`
             })
 
+            newembed.setColor(getRarityColor(randomPokemon.rarity));
 
-              await interaction.update({ content: `You caught a ${chosenName} with a Pokeball! ${chanceMessage}`, components: [], embeds: [newembed]});
+              await interaction.update({ components: [], embeds: [newembed]});
             } else {
-              await interaction.reply(`The ${chosenName} broke free!`);
+
+            const failembed = new EmbedBuilder()
+              .setTitle(`❌ | The ${randomPokemon.name} broke free!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${pokeballs}\nGreatBalls: ${greatballs}\nUltraBalls: ${user.ultraball}\nMasterBalls: ${masterballs}`
+            })
+
+            failembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [failembed]});
+              outcome = "escaped";
             }
 
             collector.stop();
 
-
-        } else if (interaction.customId === 'greatball-button') {
-          let catchChance = 0.60;
-
-          user.greatball -= 1;
-
-          await user.save()
-
-          if (chosenRarity === 'Common') {
-            catchChance += 0.2; 
-          } else if (chosenRarity === 'Uncommon') {
-            catchChance += 0.1;
-          } else if (chosenRarity === 'Very Rare') {
-            catchChance -= 0.2;
-          } else if (chosenRarity === 'Legendary') {
-            catchChance -= 0.2;
-          } else if (chosenRarity === 'Mythical') {
-            catchChance -= 0.3;
-          } else if (chosenRarity === 'Shiny') {
-            catchChance -= 0.25;
-          } 
-
-          const random = Math.random();
-
-          catchSuccess = random < catchChance;
-
-          const chanceMessage = `catch chance ${catchChance} roll ${random} and success ${catchSuccess}`
-
-          //if (catchChance != 0) {
-            //globalDevMessage = chanceMessage;
-          //}
-          
-          if (catchSuccess) {
-
-            const user = await User.findOne({ userId: interaction.user.id });
-            const existingPokemonIndex = user.caughtPokemon.findIndex(
-              (pokemon) => pokemon.name === randomPokemon.name
-            );
-            if (existingPokemonIndex !== -1) {
-
-              // Pokemon already exists, increase quantity
-              user.caughtPokemon[existingPokemonIndex].quantity++; 
-            } else {
-
-              // Add new Pokemon with quantity 1
-              user.caughtPokemon.push({
-                name: randomPokemon.name,
-                rarity: randomPokemon.rarity,
-                image: randomPokemon.image,
-                dexnum: randomPokemon.dexnum,
-                quantity: 1 
-              });
-            }
-
-            // Save the updated array instead of overwriting it entirely
-            await user.save();
-
-
-              await interaction.update({ content: `You caught a ${chosenName} with a Greatball!`, components: []});
-            } else {
-              await interaction.reply(`The ${chosenName} broke free!`);
-            }
-            collector.stop();
-        } else if (interaction.customId === 'ultraball-button') {
-          let catchChance = 0.70;
-
-          user.ultraball -= 1;
-
-          await user.save()
-
-          if (chosenRarity === 'Common') {
-            catchChance += 0.2; 
-          } else if (chosenRarity === 'Uncommon') {
-            catchChance += 0.1;
-          } else if (chosenRarity === 'Very Rare') {
-            catchChance -= 0.2;
-          } else if (chosenRarity === 'Legendary') {
-            catchChance -= 0.2;
-          } else if (chosenRarity === 'Mythical') {
-            catchChance -= 0.3;
-          } else if (chosenRarity === 'Shiny') {
-            catchChance -= 0.25;
-          } 
-
-          const random = Math.random();
-
-          catchSuccess = random < catchChance;
-
-          const chanceMessage = `catch chance ${catchChance} roll ${random} and success ${catchSuccess}`
-
-          //if (catchChance != 0) {
-            //globalDevMessage = chanceMessage;
-          //}
-
-          if (catchSuccess) {
-
-            const user = await User.findOne({ userId: interaction.user.id });
-            const existingPokemonIndex = user.caughtPokemon.findIndex(
-              (pokemon) => pokemon.name === randomPokemon.name
-            );
-            if (existingPokemonIndex !== -1) {
-
-              // Pokemon already exists, increase quantity
-              user.caughtPokemon[existingPokemonIndex].quantity++; 
-            } else {
-
-              // Add new Pokemon with quantity 1
-              user.caughtPokemon.push({
-                name: randomPokemon.name,
-                rarity: randomPokemon.rarity,
-                image: randomPokemon.image,
-                dexnum: randomPokemon.dexnum,
-                quantity: 1 
-              });
-            }
-
-            // Save the updated array instead of overwriting it entirely
-            await user.save();
-
-
-              await interaction.reply(`You caught a ${chosenName} with a Ultraball!`);
-            } else {
-              await interaction.reply(`The ${chosenName} broke free!`);
-            }
-            collector.stop();
         } else if (interaction.customId === 'masterball-button') {
           let catchChance = 999999999999999;
 
@@ -371,17 +409,13 @@ module.exports = {
             catchChance -= 999;
           } 
 
-          const random = Math.random();
+          const randoms = Math.floor(Math.random() * 101);
 
-          catchSuccess = random < catchChance;
-
-          const chanceMessage = `catch chance ${catchChance} roll ${random} and success ${catchSuccess}`
-
-          //if (catchChance != 0) {
-            //globalDevMessage = chanceMessage;
-          //}
+          catchSuccess = randoms < catchChance;
 
           if (catchSuccess) {
+
+            outcome = "Success!";
 
             const user = await User.findOne({ userId: interaction.user.id });
             const existingPokemonIndex = user.caughtPokemon.findIndex(
@@ -407,26 +441,58 @@ module.exports = {
             await user.save();
 
 
-              await interaction.update({ content: `You caught a ${chosenName} with a Masterball!`, components: [] });
-            } else {
-              await interaction.reply(`The ${chosenName} broke free!`);
-            }
+            const newembed = new EmbedBuilder()
+              .setTitle(`✅ | ${user.userName} Caught ${randomPokemon.name} with a Masterball!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${user.greatball}\nUltraBalls: ${ultraballs}\nMasterBalls: ${user.masterball}`
+            })
+
+            newembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [newembed]});
+            } else if (!catchSuccess) {
+
+            const failembed = new EmbedBuilder()
+              .setTitle(`❌ | The ${randomPokemon.name} broke free!`)
+              .setImage(randomPokemon.image)
+              .setFooter({
+                text: `Catch Chance: ${parseInt(catchChance)}\nRoll: ${parseInt(randoms)}\n=======================\nPokeballs: ${user.pokeball}\nGreatBalls: ${user.greatball}\nUltraBalls: ${ultraballs}\nMasterBalls: ${masterballs}`
+            })
+
+            failembed.setColor(getRarityColor(randomPokemon.rarity));
+
+              await interaction.update({ components: [], embeds: [failembed]});
+              outcome = "escaped";
+            } 
+
             collector.stop();
         }
       });
 
       // Collector on end
-      collector.on('end', async () => {
+      collector.on('end', async (collected) => {
+        
+
+        if (collected.size === 0) {
+          // Pokémon fled
+          const escapeembed = new EmbedBuilder()
+            .setTitle(`💨 The ${randomPokemon.name} fled!`)
+            .setImage(randomPokemon.image)
+            .setFooter({
+              text: `Pokeballs: ${user.pokeball}\nGreatBalls: ${user.greatball}\nUltraBalls: ${user.ultraball}\nMasterBalls: ${user.masterball}`
+            });
+      
+          escapeembed.setColor(getRarityColor(randomPokemon.rarity));
+          await interaction.editReply({ embeds: [escapeembed] });
+        }
+        
 
         pokeballButton.setDisabled(true);
         greatballButton.setDisabled(true);
         sexballButton.setDisabled(true);
+        masterballButton.setDisabled(true);
 
-        await interaction.editReply({
-          embeds: [embed],
-          components: [buttonRow],
-          content: `${catchSuccess}`,
-        });
       }); 
     } catch (error) {
       console.error(error);

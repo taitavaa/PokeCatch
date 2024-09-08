@@ -1,8 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
 const User = require('../../Schemas.js/userAccount.js');
 
-const { pokemonData } = require('../../data/pokemonData.js');
-
 const items = {
     "pokeball": 1,
     "greatball": 2,
@@ -14,10 +12,10 @@ const items = {
 }
 
 const price = {
-    "pokeball": 10,
-    "greatball": 20,
-    "ultraball": 30,
-    "masterball": 40,
+    "pokeball": 0,
+    "greatball": 0,
+    "ultraball": 0,
+    "masterball": 0,
 }
 
 module.exports = {
@@ -44,12 +42,28 @@ module.exports = {
                 return interaction.reply({ content: 'You don\'t have an account yet. Use the /start command to create one.', ephemeral: false });
             }
 
-            const item = interaction.options.getString('item');
+            const itemInput = interaction.options.getString('item');
             const amount = interaction.options.getInteger('amount');
 
-            if (!items[item]) {
-                return interaction.reply({ content: `Couldn't find an item named "${item}". Please check your spelling.`, ephemeral: false });
-            }
+            let item;
+            const itemId = parseInt(itemInput);
+            if (!isNaN(itemId)) {
+                // Input is an integer, try to find the item by ID
+                item = Object.keys(items).find(key => items[key] === itemId);
+                if (!item) {
+                    return interaction.reply({ content: `Couldn't find an item with ID ${itemInput}.`, ephemeral: false });
+                }
+                } else {
+                    // Input is a string, try to find the item by name
+                    item = Object.keys(items).find(key => key === itemInput);
+                    if (!item) {
+                        return interaction.reply({ content: `Couldn't find an item named "${itemInput}". Please check your spelling.`, ephemeral: false });
+                    }
+                }
+
+                if (!(item in items)) {
+                    return interaction.reply({ content: `Couldn't find an item named "${item}". Please check your spelling.`, ephemeral: false });
+                }
 
             if (user.balance < price[item] * amount) {
                 return interaction.reply({ content: `You don't have enough money to buy ${amount} ${item}.`, ephemeral: false });

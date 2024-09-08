@@ -26,9 +26,12 @@ module.exports = {
         return interaction.reply({ content: 'The person you\'re trying to send coins to, doesn\'t have an account yet.', ephemeral: false });
       }
 
-      recipentData.balance += amount;
+      if (amount < 1 ) {
+        return await interaction.reply({ content: 'Stop avoiding taxes and gib me moni', ephemeral: false });
+      } else {recipentData.balance += amount;
       await senderData.save();
-      await recipentData.save();
+      await recipentData.save(); 
+    }
 
       await interaction.reply('You have successfully given ' + amount + ' GYAAATTTTTTTTTTTTTdollars to ' + recipent.username + '.')
     } catch (error) {

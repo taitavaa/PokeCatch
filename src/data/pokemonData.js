@@ -1,6 +1,6 @@
 const pokemonData = [
   { name: "Bulbasaur", dexnum: 1, type: ["Grass", "Poison"], rarity: "Common",
-  image: "https://play.pokemonshowdown.com/sprites/ani/bulbasaur.gif" },
+  image: "https://play.pokemonshowdown.com/sprites/ani/bulbasaur.gif", },
 { name: "Ivysaur", dexnum: 2, type: ["Grass", "Poison"], rarity: "Uncommon",
   image: "https://play.pokemonshowdown.com/sprites/ani/ivysaur.gif" },
 { name: "Venusaur", dexnum: 3, type: ["Grass", "Poison"], rarity: "Very Rare",
@@ -1246,6 +1246,8 @@ const pokemonData = [
     image: "https://i.imgur.com/foSdXdE.gif" },
   { name: "Xiaojie Cat", dexnum: 0, type: ["Car"], rarity: "Car",
     image: "https://media.tenor.com/sMV8tcaDWKoAAAAM/xiaojie.gif" },
+  { name: "The Destroyer of Universes", dexnum: 69420, type: ["Car"], rarity: "Car",
+    image: "https://i.pinimg.com/originals/a6/1d/e1/a61de12663904e43b4a677d200e894e5.gif" },
   
 
 ]

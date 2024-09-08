@@ -9,7 +9,7 @@ const rarityWeights = {
   "Rare": 20,
   "Very Rare": 2.9981279296875,
   "Legendary": 0.0015,
-  "Mythical": 0.00025,
+  "Mythical": 0.00025,  
   "Shiny": 0.0001220703125,
   "What The Fuck": 0, // What the Fuck is, like a Rarity for some unknown reason
 };
@@ -88,50 +88,54 @@ module.exports = {
 
         embed.setColor(getRarityColor(randomPokemon.rarity));
 
-      const pokeballButton = new ButtonBuilder()
-        .setLabel("Pokeball")
-        .setStyle("Primary")
-        .setCustomId("pokeball-button");
+      
 
-      const greatballButton = new ButtonBuilder()
-        .setLabel("Greatball")
-        .setStyle("Primary")
-        .setCustomId("greatball-button");
+        const buttonRow = new ActionRowBuilder();
 
-      const sexballButton = new ButtonBuilder()
-        .setLabel("Ultraball")
-        .setStyle("Danger")
-        .setCustomId("ultraball-button");
-
-      const masterballButton = new ButtonBuilder()
-        .setLabel("Masterball")
-        .setStyle("Danger")
-        .setCustomId("masterball-button");
-
+      
+      let pokeballButton;
       if (user.pokeball > 0) {
-        pokeballButton.setDisabled(false);
-      } else {
-        pokeballButton.setDisabled(true);
-      } if (user.greatball > 0) {
-        greatballButton.setDisabled(false);
-      } else {
-        greatballButton.setDisabled(true);
-      } if (user.ultraball > 0) {
-        sexballButton.setDisabled(false);
-      } else {
-        sexballButton.setDisabled(true);
-      } if (user.masterball > 0){
-        masterballButton.setDisabled(false);
-      } else {
-        masterballButton.setDisabled(true);
+
+        pokeballButton = new ButtonBuilder()
+          .setEmoji("<:Pokeball:1281616987889340568>")
+          .setStyle("Secondary")
+          .setCustomId("pokeball-button");
+
+        buttonRow.addComponents(pokeballButton);
+
       }
 
-      const buttonRow = new ActionRowBuilder().addComponents(
-        pokeballButton,
-        greatballButton,
-        sexballButton,
-        masterballButton,
-      );
+      let greatballButton;
+      if (user.greatball > 0) {
+
+        greatballButton = new ButtonBuilder()
+        .setEmoji("<:Greatball:1281616969103179877>")
+        .setStyle("Secondary")
+        .setCustomId("greatball-button");
+        buttonRow.addComponents(greatballButton);
+
+      } 
+      
+      let sexballButton;
+      if (user.ultraball > 0) {
+
+        sexballButton = new ButtonBuilder()
+        .setEmoji("<:Ultraball:1281616793915359303>")
+        .setStyle("Secondary")
+        .setCustomId("ultraball-button");
+        buttonRow.addComponents(sexballButton);
+      
+      }
+
+      let masterballButton;
+      if (user.masterball > 0){
+
+        masterballButton = new ButtonBuilder()
+        .setEmoji("<:Masterball:1281613764428304475>")
+        .setStyle("Secondary")
+        .setCustomId("masterball-button");
+        buttonRow.addComponents(masterballButton);
+      }
 
       // 3. Send the initial message:
       const reply = await interaction.reply({ embeds: [embed], components: [buttonRow] });
@@ -175,7 +179,7 @@ module.exports = {
 
           const randoms = Math.floor(Math.random() * 101);
 
-          catchSuccess = randoms < catchChance;
+          catchSuccess = randoms <= catchChance;
 
           if (catchSuccess) {
 
@@ -233,29 +237,29 @@ module.exports = {
 
 
         } else if (interaction.customId === 'greatball-button') {
-          let catchChance = 0.60;
+          let catchChance = 60;
 
           user.greatball -= 1;
 
           await user.save()
 
           if (chosenRarity === 'Common') {
-            catchChance += 0.2; 
+            catchChance += 20; 
           } else if (chosenRarity === 'Uncommon') {
-            catchChance += 0.1;
+            catchChance += 10;
           } else if (chosenRarity === 'Very Rare') {
-            catchChance -= 0.2;
+            catchChance -= 10;
           } else if (chosenRarity === 'Legendary') {
-            catchChance -= 0.2;
+            catchChance -= 20;
           } else if (chosenRarity === 'Mythical') {
-            catchChance -= 0.3;
+            catchChance -= 30;
           } else if (chosenRarity === 'Shiny') {
-            catchChance -= 0.25;
-          } 
+            catchChance -= 25;
+          }
 
           const randoms = Math.floor(Math.random() * 101);
 
-          catchSuccess = randoms < catchChance;
+          catchSuccess = randoms <= catchChance;
           
           if (catchSuccess) {
 
@@ -311,29 +315,29 @@ module.exports = {
             collector.stop();
 
         } else if (interaction.customId === 'ultraball-button') {
-          let catchChance = 0.70;
+          let catchChance = 70;
 
           user.ultraball -= 1;
 
           await user.save()
 
           if (chosenRarity === 'Common') {
-            catchChance += 0.2; 
+            catchChance += 20; 
           } else if (chosenRarity === 'Uncommon') {
-            catchChance += 0.1;
+            catchChance += 10;
           } else if (chosenRarity === 'Very Rare') {
-            catchChance -= 0.2;
+            catchChance -= 10;
           } else if (chosenRarity === 'Legendary') {
-            catchChance -= 0.2;
+            catchChance -= 20;
           } else if (chosenRarity === 'Mythical') {
-            catchChance -= 0.3;
+            catchChance -= 30;
           } else if (chosenRarity === 'Shiny') {
-            catchChance -= 0.25;
-          } 
+            catchChance -= 25;
+          }
 
           const randoms = Math.floor(Math.random() * 101);
 
-          catchSuccess = randoms < catchChance;
+          catchSuccess = randoms <= catchChance;
 
           if (catchSuccess) {
 
@@ -389,29 +393,15 @@ module.exports = {
             collector.stop();
 
         } else if (interaction.customId === 'masterball-button') {
-          let catchChance = 999999999999999;
+          let catchChance = 100;
 
           user.masterball -= 1;
 
           await user.save()
 
-          if (chosenRarity === 'Common') {
-            catchChance += 999; 
-          } else if (chosenRarity === 'Uncommon') {
-            catchChance += 999;
-          } else if (chosenRarity === 'Very Rare') {
-            catchChance -= 999;
-          } else if (chosenRarity === 'Legendary') {
-            catchChance -= 999;
-          } else if (chosenRarity === 'Mythical') {
-            catchChance -= 999;
-          } else if (chosenRarity === 'Shiny') {
-            catchChance -= 999;
-          } 
-
           const randoms = Math.floor(Math.random() * 101);
 
-          catchSuccess = randoms < catchChance;
+          catchSuccess = randoms <= catchChance;
 
           if (catchSuccess) {
 
@@ -484,14 +474,8 @@ module.exports = {
             });
       
           escapeembed.setColor(getRarityColor(randomPokemon.rarity));
-          await interaction.editReply({ embeds: [escapeembed] });
+          await interaction.editReply({ embeds: [escapeembed], components: [] });
         }
-        
-
-        pokeballButton.setDisabled(true);
-        greatballButton.setDisabled(true);
-        sexballButton.setDisabled(true);
-        masterballButton.setDisabled(true);
 
       }); 
     } catch (error) {

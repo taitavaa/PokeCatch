@@ -13,64 +13,22 @@ module.exports = {
         return interaction.reply({ content: 'You don\'t have an account yet. Use the /start command to create one.', ephemeral: false });
       }
 
-      const pokeballPrices = {
-        'Pokeball': { price: 10, quantity: 0 },
-        'Greatball': { price: 50, quantity: 0 },
-        'Ultraball': { price: 100, quantity: 0 },
-        'Masterball': { price: 500, quantity: 0 }
-      };
-
       const shopEmbed = new EmbedBuilder()
-        .setTitle('Pokéball Emporium')
-        .setDescription("Welcome!  Stock up on Pokéballs!")
-        .setColor('Blue');
+        .setTitle('PokéMarket')
+        .setDescription(
+          
+          `**===How to Buy===**\n\`/buy (item name or id) (amount)\` \n for example:\n\`/buy pokeball 69\`\n\`/buy 1 69\`\n\n**===Currencies===**\n<:Coin:1281622719745757204>Coins: ${user.balance}  \n\n**===Pokéballs===**\n<:Reply_Cont:1282003687828623400> \`1\`<:Pokeball:1281616987889340568>Pokéballs: 100\n<:Reply_Cont:1282003687828623400> \`2\`<:Greatball:1281616969103179877>Greatballs: 100\n<:Reply_Cont:1282003687828623400> \`3\`<:Ultraball:1281616793915359303>Ultraballs: 100\n<:Reply_Cont:1282003687828623400> \`4\`<:Masterball:1281613764428304475>Masterballs: 100`
+        
+        )
+        .setColor('Blue')
+      shopEmbed.setFooter({ text: `Your current balance: ${user.balance} ` });
 
-      // Correct field structure
-      const fields = []; 
-      for (const ballType in pokeballPrices) {
-        fields.push({
-          name: ballType,
-          value: `Price: ${pokeballPrices[ballType].price} Pokédollars`,
-          inline: true // Make fields side-by-side
-        });
-      }
+      await interaction.reply({ embeds: [shopEmbed] });
 
-      shopEmbed.addFields(fields); // Add the fields array
-
-      shopEmbed.setFooter({ text: `Your current balance: ${user.balance} Pokédollars` });
-
-      const pokeballButton = new ButtonBuilder()
-        .setCustomId('pokeball-buy')
-        .setLabel('Buy Pokéballs')
-        .setStyle('Primary');
-
-      const greatballButton = new ButtonBuilder()
-        .setCustomId('greatball-buy')
-        .setLabel('Buy Greatballs')
-        .setStyle('Primary');
-
-      const ultraballButton = new ButtonBuilder()
-        .setCustomId('ultraball-buy')
-        .setLabel('Buy Ultraballs')
-        .setStyle('Primary');
-
-      const masterballButton = new ButtonBuilder()
-        .setCustomId('masterball-buy')
-        .setLabel('Buy Masterballs')
-        .setStyle('Primary');
-
-      const buttonRow = new ActionRowBuilder().addComponents(
-        pokeballButton,
-        greatballButton,
-        ultraballButton,
-        masterballButton
-      );
-
-      const reply = await interaction.reply({ content: `Use /buy plz, get free cash using /free-robux` });
 
     } catch (error) {
       console.log(error);
-      await interaction.reply('An error occurred while accessing the Pokéball Shop.');
+      await interaction.reply('An error occurred while accessing the Market.');
     }
   }
 };

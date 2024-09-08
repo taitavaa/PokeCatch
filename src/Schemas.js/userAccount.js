@@ -34,8 +34,15 @@ const userSchema = new mongoose.Schema({
     rarity: String,
     image: String,
     dexnum: Number,
-    quantity: Number,
+    quantity: {
+      type: Number,
+      default: 0,
+    }}],
+  seenPokemon: [{
+    name: String,
+    seen: Number,
   }],
+
 });
 
 const User = mongoose.model('User', userSchema);

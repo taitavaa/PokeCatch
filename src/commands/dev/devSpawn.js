@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, ActionRowBuilder, Comp
 const User = require('../../Schemas.js/userAccount');
 
 const { pokemonData } = require('../../data/pokemonData.js');
+const Pokemon = require('../../Schemas.js/pokemonQuantity');
 
 
 module.exports = {
@@ -102,6 +103,12 @@ module.exports = {
         sexballButton,
       );
 
+      const pokemon = randomPokemon;
+      if (!pokemon) {
+        const newPokemon = new Pokemon({ name: pokemonName, ingame: 0 });
+        await newPokemon.save();
+      }      
+
       // Send the initial message:
       const reply = await interaction.reply({ embeds: [embed], components: [buttonRow] });
 
@@ -119,12 +126,14 @@ module.exports = {
         collector.on('collect', async (interaction) => {
           if (interaction.customId === 'pokeball-button') {
 
+
+
             user.pokeball -= 1;
 
             // Save the updated array instead of overwriting it entirely
             await user.save();
 
-            let catchChance = 0.4;
+            let catchChance = 999;
 
             if (chosenRarity === 'Common') {
               catchChance += 0.2; 
@@ -146,10 +155,6 @@ module.exports = {
 
             const chanceMessage = `catch chance ${catchChance} roll ${random} and success ${catchSuccess}`
 
-            //if (let (catchChance) != 0) {
-              //globalDevMessage = chanceMessage;
-            //}
-
 
             if (catchSuccess) {
 
@@ -157,11 +162,32 @@ module.exports = {
               const existingPokemonIndex = user.caughtPokemon.findIndex(
                 (pokemon) => pokemon.name === randomPokemon.name
               );
+
+              const pokemon = await Pokemon.findOne({ name: randomPokemon.name });
+              if (!pokemon) {
+               const newPokemon = new Pokemon({ name: randomPokemon.name, ingame: 0 });
+               await newPokemon.save();
+             }
+
+              async function increasePokemonCount() {
+                  try {
+                    const updatedPokemon = await Pokemon.findOneAndUpdate({ name: randomPokemon.name }, { $inc: { ingame: 1 } }, { new: true });
+                    console.log(`${randomPokemon.name}'s ingame value increased to ${updatedPokemon.ingame}`);
+                    return updatedPokemon;
+                  } catch (err) {
+                    console.error(err);
+                  }
+                }
+
+              const updatedPokemon = await increasePokemonCount();
+
               if (existingPokemonIndex !== -1) {
 
                 // Pokemon already exists, increase quantity
                 user.caughtPokemon[existingPokemonIndex].quantity++; 
               } else {
+
+
 
                 // Add new Pokemon with quantity 1
                 user.caughtPokemon.push({
@@ -185,6 +211,7 @@ module.exports = {
 
 
           } else if (interaction.customId === 'greatball-button') {
+            
             let catchChance = 0.60;
 
             if (chosenRarity === 'Common') {
@@ -243,7 +270,7 @@ module.exports = {
               }
               collector.stop();
           } else if (interaction.customId === 'ultraball-button') {
-            let catchChance = 0.70;
+            let catchChance = 9999;
 
             if (chosenRarity === 'Common') {
               catchChance += 0.2; 
@@ -281,6 +308,8 @@ module.exports = {
                 user.caughtPokemon[existingPokemonIndex].quantity++; 
               } else {
 
+
+
                 // Add new Pokemon with quantity 1
                 user.caughtPokemon.push({
                   name: randomPokemon.name,
@@ -304,6 +333,24 @@ module.exports = {
         });
 
         collector.on('end', async () => {
+
+          const user = await User.findOne({ userId: interaction.user.id });
+          const existingPokemonIndex = user.seenPokemon.findIndex(
+            (pokemon) => pokemon.name === randomPokemon.name
+          );
+          if (existingPokemonIndex !== -1) {
+            // Pokemon already exists, increase quantity
+            await User.updateOne(
+              { userId: interaction.user.id, "seenPokemon.name": randomPokemon.name },
+              { $inc: { "seenPokemon.$.seen": 1 } }
+            );
+          } else {
+            // Add new Pokemon with quantity 1
+            await User.updateOne(
+              { userId: interaction.user.id },
+              { $push: { seenPokemon: { name: randomPokemon.name, seen: 1 } } }
+            );
+          }
 
           pokeballButton.setDisabled(true);
           greatballButton.setDisabled(true);
